@@ -17,14 +17,13 @@ contract StakingContract is Ownable {
     }
     using SafeERC20 for IERC20;
 
-    IERC20 public immutable stakingToken;
-    IERC20 public immutable rewardToken;
+    IERC20 private immutable stakingToken;
+    IERC20 private immutable rewardToken;
 
     uint public maxLockingPeriod; // Maximum locking period in seconds
     uint public maxLockMultiplier;
     uint public claimDelay; // Claim delay in seconds
-    uint public apy; // Annual Percentage Yield, represented in APY * 1e6 (to handle decimal precision)
-    uint public rewardPerSecond; // Reward rate per second
+    uint public apy; // Annual Percentage Yield, represented in APY
     uint public totalStaked;
     uint public totalRewardsClaimed;
 
@@ -132,7 +131,7 @@ contract StakingContract is Ownable {
     /// @return The locking multiplier for the user's staked tokens.
     function calculateLockingMultiplier(
         uint stakingStartTimeStamp
-    ) public view returns (uint) {
+    ) internal view returns (uint) {
         require(
             stakingStartTimeStamp <= block.timestamp,
             "Lock time is in the future"
@@ -142,17 +141,17 @@ contract StakingContract is Ownable {
         if (timeElapsed > maxLockingPeriod) {
             timeElapsed = maxLockingPeriod;
         }
-        uint numerator = timeElapsed * maxLockMultiplier * 1e18; // to handle decimals upto 2 places
+        uint numerator = timeElapsed * maxLockMultiplier * 1e18; // to handle decimals upto 18
         uint demoninator = maxLockingPeriod;
         uint calculation = numerator / demoninator;
 
-        return calculation; // Multiply before dividing add 1e4 to handle locmultiplyer upto 4 decimal places
+        return calculation;
     }
 
     /// @notice Calculates the reward for a user.
     /// @param user The address of the user.
     /// @return The reward for the user.
-    function calculateReward(address user) public view returns (uint) {
+    function calculateReward(address user) internal view returns (uint) {
         require(users[user].amount > 0, "User has no staked tokens");
 
         uint userAmount = users[user].amount;
@@ -162,7 +161,7 @@ contract StakingContract is Ownable {
 
         uint numerator = userAmount * lockingMultiplier * apy;
 
-        return numerator / (1e20); // Multiply before dividing //adding 1e4 to handle decimal places for locing
+        return numerator / (1e20); //
     }
     /// @notice Updates the parameters of the staking contract.
     /// @param _maxLockingPeriod The new maximum locking period.
