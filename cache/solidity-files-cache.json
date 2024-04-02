@@ -341,8 +341,8 @@
       ]
     },
     "C:\\Users\\omkar\\OneDrive\\Documents\\interview task\\contracts\\staking.sol": {
-      "lastModificationDate": 1712085186239,
-      "contentHash": "372fb321c24a5fa3649a8379c9f75c17",
+      "lastModificationDate": 1712087660145,
+      "contentHash": "af692f621286547f7b918e3b66ccaa8b",
       "sourceName": "contracts/staking.sol",
       "solcConfig": {
         "version": "0.8.24",

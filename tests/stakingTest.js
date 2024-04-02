@@ -42,6 +42,10 @@ describe("StakingContract", function () {
     // Transfer some RewardToken to the StakingContract
     await rewardToken.transfer(stakingContract.address, hunderdTokensParsed);
     await stakingToken.transfer(addr1.address, hunderdTokensParsed);
+    await stakingToken.approve(stakingContract.address, hunderdTokensParsed);
+    await stakingToken
+      .connect(addr1)
+      .approve(stakingContract.address, hunderdTokensParsed);
   });
 
   it("Should stake tokens", async function () {
@@ -197,6 +201,51 @@ describe("StakingContract", function () {
     // Log the rewards received after the second claim
     console.log(
       `Rewards received after second claim: ${finalUserInfo.claimedAmount}`
+    );
+  });
+  it("should revert if the staking amount is 0", async function () {
+    await expect(stakingContract.connect(addr1).stake(0)).to.be.revertedWith(
+      "AmountMustBeGreaterThanZero"
+    );
+  });
+
+  it("should revert if the user already has staked tokens", async function () {
+    await stakingContract.connect(addr1).stake(hunderdTokensParsed);
+    await expect(
+      stakingContract.connect(addr1).stake(hunderdTokensParsed)
+    ).to.be.revertedWith("UserAlreadyHasStakedTokens");
+  });
+
+  it("should revert if the user has no staked tokens when unstaking", async function () {
+    await expect(stakingContract.connect(addr1).unstake()).to.be.revertedWith(
+      "UserHasNoStakedTokens"
+    );
+  });
+
+  it("should revert if the claim delay has not passed when unstaking", async function () {
+    await stakingContract.connect(addr1).stake(hunderdTokensParsed);
+    await expect(stakingContract.connect(addr1).unstake()).to.be.revertedWith(
+      "ClaimDelayHasNotPassed"
+    );
+  });
+
+  it("should revert if the user has no staked tokens when claiming", async function () {
+    await expect(stakingContract.connect(addr1).claim()).to.be.revertedWith(
+      "UserHasNoStakedTokens"
+    );
+  });
+
+  it("should revert if the claim delay has not passed when claiming", async function () {
+    await stakingContract.connect(addr1).stake(hunderdTokensParsed);
+    await expect(stakingContract.connect(addr1).claim()).to.be.revertedWith(
+      "ClaimDelayHasNotPassed"
+    );
+  });
+
+  it("should revert if there are no rewards to claim", async function () {
+    await stakingContract.connect(addr1).stake(hunderdTokensParsed);
+    await expect(stakingContract.connect(addr1).claim()).to.be.revertedWith(
+      "ClaimDelayHasNotPassed"
     );
   });
 });

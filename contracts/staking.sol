@@ -29,6 +29,13 @@ contract StakingContract is Ownable {
 
     mapping(address => User) public users;
 
+    error AmountMustBeGreaterThanZero();
+    error UserAlreadyHasStakedTokens();
+    error UserHasNoStakedTokens();
+    error ClaimDelayHasNotPassed();
+    error NoRewardsToClaim();
+    error LockTimeIsInTheFuture();
+
     event Staked(address indexed user, uint amount, uint stakingStartTimeStamp);
     event Unstaked(address indexed user, uint amount);
     event Claimed(address indexed user, uint amount);
@@ -59,11 +66,13 @@ contract StakingContract is Ownable {
     /// @notice Allows a user to stake a certain amount of tokens.
     /// @param amount The amount of tokens the user wants to stake.
     function stake(uint amount) external {
-        require(amount > 0, "Amount must be greater than 0");
-        require(
-            users[msg.sender].amount == 0,
-            "User already has staked tokens"
-        );
+        if (amount <= 0) {
+            revert AmountMustBeGreaterThanZero();
+        }
+
+        if (users[msg.sender].amount != 0) {
+            revert UserAlreadyHasStakedTokens();
+        }
 
         uint currentTimeStamp = block.timestamp;
 
@@ -82,11 +91,13 @@ contract StakingContract is Ownable {
     /// @notice Allows a user to unstake their tokens and claim their rewards.
     function unstake() external {
         User storage user = users[msg.sender];
-        require(user.amount > 0, "User has no staked tokens");
-        require(
-            block.timestamp >= user.stakingStartTimeStamp + claimDelay,
-            "Claim delay has not passed"
-        );
+        if (user.amount <= 0) {
+            revert UserHasNoStakedTokens();
+        }
+
+        if (block.timestamp < user.stakingStartTimeStamp + claimDelay) {
+            revert ClaimDelayHasNotPassed();
+        }
 
         uint amount = user.amount;
         totalStaked -= amount;
@@ -105,14 +116,19 @@ contract StakingContract is Ownable {
     function claim() external {
         address msgSender = msg.sender;
 
-        require(users[msgSender].amount > 0, "User has no staked tokens");
-        require(
-            block.timestamp >= users[msgSender].lastClaimTime + claimDelay,
-            "Claim delay has not passed"
-        );
+        if (users[msgSender].amount <= 0) {
+            revert UserHasNoStakedTokens();
+        }
+
+        if (block.timestamp < users[msgSender].lastClaimTime + claimDelay) {
+            revert ClaimDelayHasNotPassed();
+        }
 
         uint reward = calculateReward(msgSender);
-        require(reward > users[msgSender].claimedAmount, "No rewards to claim");
+
+        if (reward <= users[msgSender].claimedAmount) {
+            revert NoRewardsToClaim();
+        }
 
         reward -= users[msgSender].claimedAmount;
 
@@ -132,10 +148,9 @@ contract StakingContract is Ownable {
     function calculateLockingMultiplier(
         uint stakingStartTimeStamp
     ) internal view returns (uint) {
-        require(
-            stakingStartTimeStamp <= block.timestamp,
-            "Lock time is in the future"
-        );
+        if (stakingStartTimeStamp > block.timestamp) {
+            revert LockTimeIsInTheFuture();
+        }
         uint timeElapsed = block.timestamp - stakingStartTimeStamp;
 
         if (timeElapsed > maxLockingPeriod) {
@@ -152,7 +167,9 @@ contract StakingContract is Ownable {
     /// @param user The address of the user.
     /// @return The reward for the user.
     function calculateReward(address user) internal view returns (uint) {
-        require(users[user].amount > 0, "User has no staked tokens");
+        if (users[user].amount <= 0) {
+            revert UserHasNoStakedTokens();
+        }
 
         uint userAmount = users[user].amount;
         uint lockingMultiplier = calculateLockingMultiplier(
