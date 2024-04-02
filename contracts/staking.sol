@@ -5,7 +5,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+/// @title StakingContract
+/// @notice This contract allows users to stake tokens and earn rewards.
 contract StakingContract is Ownable {
+    /// @notice User struct to keep track of user's staking details.
     struct User {
         uint amount;
         uint stakingStartTimeStamp;
@@ -31,6 +34,13 @@ contract StakingContract is Ownable {
     event Unstaked(address indexed user, uint amount);
     event Claimed(address indexed user, uint amount);
 
+    /// @notice Constructor for creating a new StakingContract.
+    /// @param _stakingToken The token users will be staking.
+    /// @param _rewardToken The token users will be earning as rewards.
+    /// @param _maxLockingPeriod The maximum period a user can lock their tokens for.
+    /// @param _maxLockMultiplier The maximum multiplier for locking tokens.
+    /// @param _claimDelay The delay before a user can claim their rewards.
+    /// @param _apy The annual percentage yield for staking rewards.
     constructor(
         address _stakingToken,
         address _rewardToken,
@@ -47,6 +57,8 @@ contract StakingContract is Ownable {
         apy = _apy;
     }
 
+    /// @notice Allows a user to stake a certain amount of tokens.
+    /// @param amount The amount of tokens the user wants to stake.
     function stake(uint amount) external {
         require(amount > 0, "Amount must be greater than 0");
         require(
@@ -68,6 +80,7 @@ contract StakingContract is Ownable {
         emit Staked(msg.sender, amount, currentTimeStamp);
     }
 
+    /// @notice Allows a user to unstake their tokens and claim their rewards.
     function unstake() external {
         User storage user = users[msg.sender];
         require(user.amount > 0, "User has no staked tokens");
@@ -83,13 +96,13 @@ contract StakingContract is Ownable {
 
         delete users[msg.sender];
 
-    
         rewardToken.transfer(msg.sender, reward);
         stakingToken.transfer(msg.sender, amount);
 
         emit Unstaked(msg.sender, amount);
     }
 
+    /// @notice Allows a user to claim their rewards.
     function claim() external {
         address msgSender = msg.sender;
 
@@ -114,6 +127,9 @@ contract StakingContract is Ownable {
         emit Claimed(msgSender, reward);
     }
 
+    /// @notice Calculates the locking multiplier for a user's staked tokens.
+    /// @param stakingStartTimeStamp The timestamp when the user started staking their tokens.
+    /// @return The locking multiplier for the user's staked tokens.
     function calculateLockingMultiplier(
         uint stakingStartTimeStamp
     ) public view returns (uint) {
@@ -133,6 +149,9 @@ contract StakingContract is Ownable {
         return calculation; // Multiply before dividing add 1e4 to handle locmultiplyer upto 4 decimal places
     }
 
+    /// @notice Calculates the reward for a user.
+    /// @param user The address of the user.
+    /// @return The reward for the user.
     function calculateReward(address user) public view returns (uint) {
         require(users[user].amount > 0, "User has no staked tokens");
 
@@ -145,7 +164,11 @@ contract StakingContract is Ownable {
 
         return numerator / (1e20); // Multiply before dividing //adding 1e4 to handle decimal places for locing
     }
-    // Function to update configurable parameters
+    /// @notice Updates the parameters of the staking contract.
+    /// @param _maxLockingPeriod The new maximum locking period.
+    /// @param _maxLockMultiplier The new maximum locking multiplier.
+    /// @param _claimDelay The new claim delay.
+    /// @param _apy The new APY.
     function updateParameters(
         uint _maxLockingPeriod,
         uint _maxLockMultiplier,
