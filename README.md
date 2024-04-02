@@ -3,6 +3,30 @@
 
 The Staking Contract features boosted rewards for users based on the duration for which they lock their funds. Booster multipliers are determined by the length of time users keep their tokens locked in the contract. Additionally, the contract includes mechanisms for locking funds, claiming rewards, and a configurable claim delay feature to ensure fair distribution of rewards.
 
+## RewardToken.sol contarct
+
+#### Custom ERC20 token:-"REWARD TOKEN" symbol :-"RTKN", this token will be distributed as a reward for staking.
+
+- Contract deployed on SEPOLIA  test network at:
+
+> [REWARD TOKEN Contract Address](https://sepolia.etherscan.io/address/0x49e75Ca51246Fa01dF11E54eAed4b1C6d17d0422#code)
+
+## StakingToken.sol contarct
+
+#### Custom ERC20 token:-"STAKING TOKEN" symbol :-"STKN", this token will be staked & locked to receive reward tokens.
+
+- Contract deployed on SEPOLIA  test network at:
+
+> [Staking TOKEN Contract Address](https://sepolia.etherscan.io/address/0xF28FE2d30Ec1ba4468b45597D638a774888a39eC#code)
+
+## staking.sol contarct
+#### staking contract in which users can stake tokens & claim rewards
+
+- Contract deployed on SEPOLIA  test network at:
+
+> [Staking Contract Address](https://sepolia.etherscan.io/address/0x5f8B87F01d4Cc518d96E936B95DD47E19eB5eC1f#code)
+
+
 ## Features
 
 1. **Boosted Rewards**: Users receive booster multipliers based on the length of time their tokens remain locked in the staking contract. Longer locking periods result in higher multiplier values, enhancing users' overall rewards.
