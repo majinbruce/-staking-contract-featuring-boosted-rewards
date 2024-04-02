@@ -90,7 +90,7 @@ contract StakingContract is Ownable {
 
     /// @notice Allows a user to unstake their tokens and claim their rewards.
     function unstake() external {
-        User storage user = users[msg.sender];
+        User memory user = users[msg.sender];
         if (user.amount <= 0) {
             revert UserHasNoStakedTokens();
         }
